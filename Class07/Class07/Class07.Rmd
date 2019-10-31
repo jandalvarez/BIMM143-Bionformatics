@@ -1,0 +1,286 @@
+---
+title: "Class 7 R functions/practice"
+author: "Justin"
+date: "10/22/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+**#R funxns Revisited**
+
+Source functions from last class.
+
+```{r}
+# source() runs another file, allows u to pull something from another locxn or sumn; Pushing play button sources the HTML below and adds them to Global Environment
+
+source("http://tinyurl.com/rescale-R")
+
+```
+
+
+```{r}
+# Test funxn out
+
+rescale(1:10)
+
+# Test more; works with NA bc rescale default is na.rm = TRUE
+
+rescale(c(1,10,5,NA,6))
+
+```
+
+```{r}
+# Working with is.numeric and ! to flip logical
+
+is.numeric(c(5:10))
+
+# is.numeric only gives TRUE with numbers
+
+is.numeric(c(5:10,"chocolate"))
+
+# flip using ! to make it say TRUE with not numbers
+
+!is.numeric(c(5:10,"chocolate"))
+
+
+
+```
+
+
+```{r}
+# Test rescale2 with characters; input isn't numeric, rescale2 tells you it should be (author wrote that themselves)
+
+# rescale2(c(5:10, "barry"))
+```
+
+
+**##Write Funxn to Find NAs**
+
+1st make simple input where answer is known
+
+```{r}
+
+x <- c(1, 2, NA, 3, NA)
+y <- c(NA, 3, NA, 3, 4)
+
+# Test is.na
+
+is.na(x)
+
+
+# Using which() on is.na will give the positions where NA = TRUE
+
+which(is.na(x))
+
+which(is.na(y))
+
+
+# Do more stuff
+
+is.na(x)
+is.na(y)
+
+is.na(x) & is.na(y)
+
+# use sum() to sum values; FALSEs(=0) and TRUEs (=1) are numbers
+
+sum(is.na(x) & is.na(y))
+
+
+
+```
+
+
+**#Create Funxn
+Make funxn using **sum()** and **is.na()** from before
+```{r}
+both_na <- function(x,y){
+  sum( is.na(x) & is.na(y) )
+}
+
+```
+
+
+Test the funxn we just created.
+```{r}
+both_na(x,y)
+```
+
+Add new variables from slides; and test funxn.
+```{r}
+x <- c(NA, NA, NA)
+y1 <- c( 1, NA, NA)
+y2 <- c( 1, NA, NA, NA)
+
+# Use both_na on x and y1
+
+both_na( x, y1 )
+
+# use both_na on x and y2
+
+both_na( x, y2)
+
+
+
+
+```
+
+
+```{r}
+x2 <- c( NA, NA )
+
+both_na( x2, y2 )
+
+```
+
+Showing how stuff gets recycled or something
+```{r}
+plot(1:10, col = c("red", "blue", "green"))
+```
+
+Mess around w it
+```{r}
+x <- c( NA, NA, NA)
+y3 <- c(1, NA, NA, NA, NA, NA, NA)
+
+both_na(x,y3)
+```
+
+What happens is the first (shorter vector, will recycle itself to become as long as the @nd, longer vector)
+
+```{r}
+x3 <- c(1, NA, NA)
+#what happens is
+#x3<- c(1, NA, NA, 1,  NA, NA, 1)
+y3 <- c(1, NA, NA, NA, NA, NA, NA)
+```
+
+
+
+```{r}
+length(x)
+length(y3)
+```
+
+Make **both_na2** in conjunction with the **stop()** funxn to allow for an error message
+```{r}
+
+# Create both_na2
+
+both_na2 <- function(x,y){
+  if (length(x) != length(y) ) {
+    stop("Inputs x and y should be the same length")
+  }
+}
+
+# Test funxn
+
+#both_na2(x, y3)
+
+
+```
+##Write grading funxn
+
+```{r}
+# Student 1 scores
+
+a <- c(100, 100, 100, 100, 100, 100, 100, 90)
+
+# Student 2 scores
+
+b <- c(100, NA, 90, 90, 90, 90, 97, 80)
+
+# using - gives everything BUT the value the original funxn gives
+a[-which.min(a)]
+
+b[-which.min(b)]
+
+# Do mean of it
+mean(a[ -which.min(a) ])
+
+mean(b[ -which.min(b) ], na.rm = TRUE)
+
+
+
+```
+check how many NAs there are
+
+```{r}
+
+any(is.na(b))
+```
+
+
+**#Create the GODLIEST funxn EVER**
+
+```{r}
+a <- c(100, 100, 100, 100, 100, 100, 100, 90)
+grade <- function(x){
+  if(any(is.na(x))) {
+    warning("Student missing HW")
+    
+  }
+  mean(x[ -which.min(x) ], na.rm = TRUE)
+  
+}
+
+grade(a)
+
+grade(b)
+```
+
+Grade whole class
+```{r}
+
+
+class <- read.csv("https://tinyurl.com/gradeinput", row.names = 1)
+
+# Use apply, 1 = row, 2 would be col; apply(x, margin, FUN)
+apply(class, 1, grade)
+
+
+
+```
+
+
+datapasta Rcade
+
+```{r}
+# Rcade
+# install.packages("devtools")
+# devtools::install_github('RLesur/Rcade')
+
+# USAGE
+#  Rcade::games
+#  Rcade::games$Pacman
+
+
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

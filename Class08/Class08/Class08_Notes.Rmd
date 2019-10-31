@@ -1,0 +1,222 @@
+---
+title: "Class 08 Notes"
+author: "Justin"
+date: "10/24/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+**##k means algorithm; 3 centers, run 20 times**
+kmeans(x, centers= 3, nstart = 20)
+
+- Input x is a numeric matrix, or data.frame, with
+one observation per row, one feature per column
+- k-means has a random component
+- Run algorithm multiple times to improve odds of
+the best model 
+
+
+```{r}
+# Generate some example data for clustering
+
+tmp <- c(rnorm(30,-3), rnorm(30,3))
+x <- cbind(x=tmp, y=rev(tmp))
+plot(x)
+
+# Use kmeans, set k=2 and nstart=20
+
+k <- kmeans(x, centers = 2, nstart = 20)
+
+# Print k
+
+k
+
+```
+
+Inspect/print the results
+***Q1.*** How many points are in each cluster?
+***Q2.*** What ‘component’ of your result object details
+ - **(a)** cluster size?
+ - **(b)** cluster assignment/membership?
+ - **(c)**cluster center?
+Plot x colored by the kmeans cluster assignment and
+ add cluster centers as blue points
+ 
+ 
+ANSWER QUESTIONS FROM ABOVE
+```{r}
+# Qa
+
+k$size
+
+# Qb
+
+k$cluster
+
+# Qc
+
+k$centers
+
+```
+ 
+
+Plot x colored by kmeans cluster; and add cluster centers as blue points
+```{r}
+# Plot x colored by kmeans cluster
+
+plot(x, col = k$cluster)
+
+points(k$centers, col="blue", pch = 11)
+
+
+
+
+```
+
+
+
+##HIERARCHICAL CLUSTERING
+
+# First we need to calculate point (dis)similarity
+# as the Euclidean distance between observations
+
+dist_matrix <- dist(x)
+
+# The hclust() function returns a hierarchical
+# clustering model
+
+hc <- hclust(d = dist_matrix)
+
+# the print method is not so useful here
+
+hc
+Call:
+hclust(d = dist_matrix)
+
+Cluster method : complete
+Distance : euclidean
+Number of objects: 60 
+
+The 'hclust()' function is used with 'dist()' function often
+```{r}
+# First we need to calculate point (dis)similarity
+# as the Euclidean distance between observations
+
+dist_matrix <- dist(x)
+
+# The hclust() function returns a hierarchical
+# clustering model
+
+hc <- hclust(d = dist_matrix)
+
+hc
+
+plot(hc)
+
+# Add line @ height x and color
+plot(hc)
+abline(h=6, col="red")
+
+# Left half of tree, branches are < 30; right half brances are > 30
+
+plot(hc)
+abline(h=6, col="red")
+cutree(hc, h = 6) #cut by height h, spits back membership vector/factor, tells which vectors are in which cluster
+
+
+
+
+```
+
+Not sure what we're doing here
+```{r}
+cutree(hc, k = 2)
+```
+
+
+**Hierarchical Clustering Methods**
+
+# Using different hierarchical clustering methods
+hc.complete <- hclust(d, method="complete") **Largest distance**
+
+hc.average <- hclust(d, method="average") **Smallest distance**
+
+hc.single <- hclust(d, method="single")
+**Avg distance**
+
+```{r}
+# Generate example data
+
+x <- rbind(
+ matrix(rnorm(100, mean=0, sd = 0.3), ncol = 2), # c1
+ matrix(rnorm(100, mean = 1, sd = 0.3), ncol = 2), # c2
+ matrix(c(rnorm(50, mean = 1, sd = 0.3), # c3
+ rnorm(50, mean = 0, sd = 0.3)), ncol = 2))
+colnames(x) <- c("x", "y")
+
+# plot data w/o clustering
+
+plot(x)
+
+
+# Make colors for known clusters
+
+col <- as.factor( rep(c("c1","c2","c3"), each=50) )
+plot(x, col=col)
+
+
+# use dist();hclust();plot(); and cutree() to return 2 and 3 clusters
+
+kmeans(x, centers = 3, nstart = 20)
+
+# Clustering
+hc2 <- hclust(dist(x))
+
+# Plot/draw tree
+plot(hc2)
+abline(h = 2, col = "blue")
+
+# Cut tree into groups and stuff
+groups <- cutree(hc2,h = 2)
+groups
+
+
+# Plot based on groups
+
+plot(x, col=groups)
+
+# Check how many points are in each cluster
+
+table(groups)
+
+
+# Cross tabulate/ compare our clustering result with the known answer
+
+table(groups, col)
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

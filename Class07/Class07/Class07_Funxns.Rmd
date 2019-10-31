@@ -1,0 +1,22 @@
+---
+title: "Class 7 R functions/practice"
+author: "Justin"
+date: "10/22/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##R funxns Revisited
+
+Source functions from last class.
+
+```{r}
+# source() runs another file, allows u to pull something from another locxn or sumn; Pushing play button sources the HTML below and adds them to Global Environment
+
+source("http://tinyurl.com/rescale-R")
+
+```
+
