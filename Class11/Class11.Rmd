@@ -1,0 +1,102 @@
+---
+title: "Class 11: Structural Bioinformatics 1"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## The PDB Database for Biomolecular Structure Data
+
+>Q1) Determine % of structures solved by X-Ray and Electron Microscopy.
+
+
+```{r}
+# Read csv file
+
+PDBstats <- read.csv("Data Export Summary.csv")
+
+PDBstats
+
+# Determining % of structures for X-Ray and Electron Microscopy
+
+# total <- sum(PDBstats$Total)
+
+# x_per <- prop.table(PDBstats)
+
+
+
+
+```
+
+
+
+>What proportion are from each method?
+
+```{r}
+(PDBstats$Total/sum(PDBstats$Total))*100
+
+```
+
+Proportion that are protein
+
+```{r}
+
+# (PDBstats$Proteins/(sum(PDBstats$Total))*100
+
+# use round function to change sig figs
+
+round((sum(PDBstats$Proteins)/(sum(PDBstats$Total)))*100, 2)
+```
+
+
+
+## Atom Selection
+
+
+```{r}
+# Read pdb file
+library(bio3d)
+
+pdb <- read.pdb("1hsg.pdb")
+
+
+a.inds <- atom.select(pdb, chain = "A")
+
+# Select C-alphas of chain A
+
+ca.inds <- atom.select(pdb, "calpha", chain="A")
+
+# We can combine multiple selection criteria to return their
+# intersection
+
+cab.inds <- atom.select(pdb, elety=c("CA","CB"), chain="A",
+resno=10:20)
+
+
+
+# only look at proteins
+
+atom.select(pdb, "protein", value = TRUE)
+
+protein <- atom.select(pdb, "protein", value = TRUE)
+write.pdb(ligand, file = "1hsg_protein.pdb")
+# ligands
+
+ligand <- atom.select(pdb, "ligand", value = TRUE)
+write.pdb(ligand, file = "1hsg_ligand.pdb")
+
+
+
+```
+
+
+
+
+
+
+
+
+

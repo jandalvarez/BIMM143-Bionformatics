@@ -1,0 +1,74 @@
+---
+title: "Class 12: Structural Bioninformatics 2"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Prep for Docking
+
+We want to produce a pdb file that's protein only and a drug only pdb file
+
+```{r}
+
+# Load Bio3d; 
+
+library(bio3d)
+
+file.name <- get.pdb("1hsg")
+
+# 
+
+pdb <- read.pdb(file.name)
+
+pdb
+
+
+```
+
+>Q1) What is the name of the two non protein resid values in this structure? What does resid
+correspond to and how would you get a listing of all reside values in this structure? 
+
+- HOH, Water; MK1
+- 
+
+```{r}
+# Make protein only pdb file
+
+ pdb <- read.pdb("1hsg.pdb")
+prot <- atom.select(pdb, "protein", value = TRUE)
+write.pdb(prot, file = "1hsg_protein.pdb")
+
+
+```
+
+
+```{r}
+# Make ligand(drug) only pdb file
+
+ pdb <- read.pdb("1hsg.pdb")
+lig <- atom.select(pdb, "ligand", value = TRUE)
+write.pdb(lig, file = "1hsg_ligand.pdb")
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
