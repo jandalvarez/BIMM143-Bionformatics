@@ -1,0 +1,307 @@
+---
+title: "Class 14"
+author: "Justin"
+date: "11/12/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Importing `countData` and `colData` 
+
+```{r}
+
+# Import dataaa
+
+counts <- read.csv("airway_scaledcounts.csv", stringsAsFactors = FALSE)
+metadata <-  read.csv("airway_metadata.csv", stringsAsFactors = FALSE)
+
+# Look @ data
+
+head(counts)
+
+head(metadata)
+
+
+
+```
+
+
+Comparing the averages of the control data v averages of the experimental data to determine if there's actually a difference between the two.
+
+```{r}
+# call upon specifically the control
+
+control <- metadata[metadata[,"dex"]=="control",]
+
+
+control$id
+
+
+```
+
+
+Now calculae mean values across control columns **countdata**
+
+```{r}
+
+counts[,control$id]
+
+# get sums
+
+control.mean <- rowSums(counts[,control$id])/length(control$id)
+
+names(control.mean) <- counts$ensgene
+
+```
+
+
+
+Do it for the other data
+
+```{r}
+
+treated <- metadata[metadata[,"dex"]=="treated",]
+
+
+treated$id
+
+counts[,treated$id]
+
+# get sums
+
+treated.mean <- rowSums(counts[,treated$id])/length(treated$id)
+
+names(treated.mean) <- counts$ensgene
+
+
+
+```
+
+
+Combine meancount data for bookkeeping purposes
+
+```{r}
+
+meancounts <- data.frame(control.mean, treated.mean)
+
+# colSums to better compare data instead of raw data
+
+colSums(meancounts)
+
+```
+
+Plot control v treated
+
+```{r}
+
+# Plotting the control v treated to see the relationship between them
+
+plot(meancounts$control.mean, meancounts$treated.mean)
+
+
+
+```
+
+
+Plot in log scale to better see the relationship;
+add log = "xy" to plot function to plot in log scale
+
+```{r}
+
+# log plot
+
+meancounts$log2fc <- log2(meancounts[,"treated.mean"]/meancounts[,"control.mean"])
+head(meancounts)
+
+
+plot(meancounts$control.mean, meancounts$treated.mean, log = "xy")
+
+
+```
+
+
+Remove the rows that have weird results: NaN, -Inf, 0, etc; because we can't say anything about this data either
+
+```{r}
+# Testing out the arr.ind thing
+
+x <- data.frame(apples=c(69, 15, 22, 69), pears=c(17, 12, 69, 69))
+
+x
+
+which(x==69, arr.ind = TRUE)
+
+
+```
+
+
+
+```{r}
+# The arr.ind tells us at what location there's a value that we are looking for; in this case, it will tell us what row and what col there's a value that = 0, and we're assigning all of the things to zero.vals
+
+zero.vals <- which(meancounts[,1:2]==0, arr.ind=TRUE)
+
+to.rm <- unique(zero.vals[,1])
+mycounts <- meancounts[-to.rm,]
+head(mycounts)
+
+```
+
+
+
+
+A common threshold used for calling something differentially expressed is a log2(FoldChange) of greater than 2 or less than -2. Let’s filter the dataset both ways to see how many genes are up or down-regulated.
+
+```{r}
+
+up.ind <- mycounts$log2fc > 2
+down.ind <- mycounts$log2fc < (-2)
+
+
+# get a count of how many are above(up) or below(down) 
+sum(up.ind)
+
+sum(down.ind)
+
+```
+
+
+## Using DESeq2 Analysis
+
+```{r, eval = FALSE}
+
+library(DESeq2)
+citation("DESeq2")
+
+```
+
+We will use the `DESeqDataSetFromMatrix()` function to build the required DESeqDataSet object and call it dds, short for our DESeqDataSet. If you get a warning about “some variables in design formula are characters, converting to factors” don’t worry about it. Take a look at the dds object once you create it
+
+```{r}
+
+# Tells DESeq2 to go thru all of the stuff 
+
+dds <- DESeqDataSetFromMatrix(countData=counts, 
+                              colData=metadata, 
+                              design=~dex, 
+                              tidy=TRUE)
+dds
+
+
+# Dunno what these do
+
+sizeFactors(dds)
+
+dispersions(dds)
+
+# results(dds)
+
+# 
+
+dds <- DESeq(dds)
+
+# Getting results
+
+res <- results(dds)
+res
+
+summary(res)
+
+
+```
+
+
+
+Volcano Plot
+
+```{r}
+
+# 
+
+res$sig <- res$padj<0.05 & abs(res$log2FoldChange)>2
+
+# How many of each?
+table(res$sig)
+
+
+```
+
+```{r}
+# Tellsus how many NAs there are in res$sig
+
+sum(is.na(res$sig))
+
+```
+
+
+
+Plotting
+
+```{r}
+# Set the color palette for our plot
+palette( c("gray","pink") )
+
+plot( res$log2FoldChange,  -log(res$padj), 
+ col=res$sig+1, ylab="-Log(P-value)", xlab="Log2(FoldChange)")
+
+# Add some cut-off lines
+abline(v=c(-2,2), col="darkgray", lty=2)
+abline(h=-log(0.1), col="darkgray", lty=2)
+```
+
+
+```{r}
+# Reset the color palette
+palette("default")
+
+plot( res$log2FoldChange,  -log(res$padj), 
+ col=res$sig+1, ylab="-Log(P-value)", xlab="Log2(FoldChange)")
+
+# Add some cut-off lines
+abline(v=c(-2,2), col="darkgray", lty=2)
+abline(h=-log(0.1), col="darkgray", lty=2)
+```
+
+
+```{r}
+# Setup our custom point color vector 
+mycols <- rep("gray", nrow(res))
+mycols[ abs(res$log2FoldChange) > 2 ]  <- "red" 
+
+# padj is pvalue adjust, can choose what p value you would like to be plotted
+
+inds <- (res$padj < 0.01) & (abs(res$log2FoldChange) > 2 )
+mycols[ inds ] <- "blue"
+
+#Volcano plot with custom colors 
+plot( res$log2FoldChange,  -log(res$padj), 
+ col=mycols, ylab="-Log(P-value)", xlab="Log2(FoldChange)" )
+
+abline(v=c(-2,2), col="gray", lty=2)
+abline(h=-log(0.1), col="gray", lty=2)
+
+
+
+
+```
+
+
+
+
+
+
+SAVE OUR RESULTS
+
+```{r}
+write.csv(res, file = "expression_results.csv")
+
+```
+
+
+
+
+
