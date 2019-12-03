@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 **#R funxns Revisited**
 
-Source functions from last class.
+Source functions from last class, in order to use them for this class.
 
 ```{r}
 # source() runs another file, allows u to pull something from another locxn or sumn; Pushing play button sources the HTML below and adds them to Global Environment
