@@ -1,0 +1,314 @@
+---
+title: "Class 15: Genome Annotation and Gene List Interpretation"
+author: "Justin"
+date: "11/14/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Differential Expression Analysis
+
+
+```{r, eval=FALSE}
+# load the DESeq2 library
+
+library(DESeq2)
+
+```
+
+
+Load data files
+
+```{r}
+metaFile <- "GSE37704_metadata.csv"
+countFile <- "GSE37704_featurecounts.csv"
+
+# Import metadata and take a peek
+colData = read.csv(metaFile, row.names=1)
+head(colData)
+
+
+
+```
+
+
+
+```{r}
+# Import countdata
+countData = read.csv(countFile, row.names=1)
+head(countData)
+```
+
+Hmm... remember that we need the **countData** and **colData** files to match up so we will need to remove that odd first column in **countData** namely **contData$length**
+
+
+
+Remove using `-1` since it's the first column
+
+```{r}
+
+# Note we need to remove the odd first $length col
+countData <- as.matrix(countData[,-1])
+head(countData)
+
+
+```
+
+
+
+Double Check `colnames` in `countData` match id values in `colData` metadata
+
+
+
+```{r}
+
+# see colnames
+
+colnames(countData)
+
+# sumb bout seeing rows also
+
+rownames(colData)
+
+
+# Use all() funxn to see if they match 
+
+all(colnames(countData)==rownames(colData))
+
+
+```
+
+
+Remove genes that have 0 in all experiments
+
+```{r}
+# so do the thing; filter out zero count genes
+
+# TRYING TO BRAINSTORM CODE: if the sum of rows 1-6 == 0, -row that this is true for; funxn rowSums() does this
+
+# "overwriting" old countData so that it'll only show the data that doesn't have 0 across all columns != means not 0, could also do > 0 
+
+countData = countData[ rowSums(countData) !=0, ] 
+head(countData)
+
+
+
+```
+
+
+
+# DESeq Analysis
+
+
+```{r}
+library(DESeq2)
+
+# Set up objecct with our data in the way DESeq wants it
+dds = DESeqDataSetFromMatrix(
+countData=countData,                 colData=colData,                             design=~condition)
+
+# Run the analysis
+dds = DESeq(dds)
+
+
+```
+
+
+Get results
+
+```{r}
+
+# using res 
+
+res = results(dds, contrast=c("condition", "hoxa1_kd", "control_sirna"))
+
+
+```
+
+
+Make a volcano plot
+
+```{r}
+plot( res$log2FoldChange, -log(res$padj) )
+```
+
+
+Make `prettier` volcano plot
+
+```{r}
+# Make a color vector for all genes
+mycols <- rep("gray", nrow(res) )
+
+# Color red the genes with absolute fold change above 2
+mycols[ abs(res$log2FoldChange) > 2 ] <- "red"
+
+# Color blue those with adjusted p-value less than 0.01 so insert res$padj < 0.01 in the 1st half of the inds thing
+#  and absolute fold change more than 2
+inds <- (res$padj < 0.01) & (abs(res$log2FoldChange) > 2 )
+mycols[ inds ] <- "blue"
+
+
+# need to make mycols the col since we specified (above) what should be what color based on certain things
+plot( res$log2FoldChange, -log(res$padj), col=mycols
+    , xlab="Log2(FoldChange)", ylab="-Log(P-value)" )
+```
+
+
+Need to install packages in order to annotate our data/results
+
+# Add Gene Symbols/Entrez IDs
+
+```{r, eval = FALSE}
+BiocManager::install("AnnotationDbi")
+BiocManager::install("org.Hs.eg.db")
+```
+
+
+
+```{r}
+
+library("AnnotationDbi")
+library("org.Hs.eg.db")
+
+columns(org.Hs.eg.db)
+
+res$symbol = mapIds(org.Hs.eg.db,
+                    keys=row.names(countData), #Where are my IDs
+                    keytype="ENSEMBL", #What format are my IDs
+                    column="SYMBOL",   #The new format I want
+                    multiVals="first") 
+
+res$entrez = mapIds(org.Hs.eg.db,
+                    keys=row.names(countData),
+                    keytype="ENSEMBL",
+                    column="ENTREZID",
+                    multiVals="first")
+
+res$name =   mapIds(org.Hs.eg.db,
+                    keys=row.names(res),
+                    keytype="ENSEMBL",
+                    column="GENENAME",
+                    multiVals="first")
+
+head(res, 10)
+
+
+
+```
+
+
+
+# Pathway ANalysis
+
+```{r}
+library(pathview)
+library(gage)
+library(gageData)
+
+
+```
+
+```{r}
+data(kegg.sets.hs)
+data(sigmet.idx.hs)
+
+# Focus on signaling and metabolic pathways only
+kegg.sets.hs = kegg.sets.hs[sigmet.idx.hs]
+
+# Examine the first 3 pathways
+head(kegg.sets.hs, 3)
+```
+
+
+```{r}
+foldchanges = res$log2FoldChange
+names(foldchanges) = res$entrez
+head(foldchanges)
+```
+
+results
+
+```{r}
+# Get the results
+keggres = gage(foldchanges, gsets=kegg.sets.hs)
+
+# 
+
+attributes(keggres)
+
+```
+
+```{r}
+head(keggres$less)
+```
+
+
+```{r}
+pathview(gene.data=foldchanges, pathway.id="hsa04110")
+
+```
+
+
+```{r}
+# A different PDF based output of the same data
+pathview(gene.data=foldchanges, pathway.id="hsa04110", kegg.native=FALSE)
+```
+
+
+
+```{r}
+## Focus on top 5 upregulated pathways here for demo purposes only
+keggrespathways <- rownames(keggres$greater)[1:5]
+
+# Extract the 8 character long IDs part of each string
+keggresids = substr(keggrespathways, start=1, stop=8)
+keggresids
+```
+
+
+```{r}
+pathview(gene.data=foldchanges, pathway.id=keggresids, species="hsa")
+```
+
+# Gene Ontology (GO)
+
+```{r}
+data(go.sets.hs)
+data(go.subs.hs)
+
+# Focus on Biological Process subset of GO
+gobpsets = go.sets.hs[go.subs.hs$BP]
+
+gobpres = gage(foldchanges, gsets=gobpsets, same.dir=TRUE)
+
+lapply(gobpres, head)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
