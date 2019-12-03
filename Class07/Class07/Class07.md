@@ -1,7 +1,6 @@
 ---
 title: "Class 7 R functions/practice"
 author: "Justin"
-date: "10/22/2019"
 output:
   html_document:
     keep_md: yes
