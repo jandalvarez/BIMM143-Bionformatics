@@ -1,7 +1,6 @@
 ---
 title: "PCA Practice"
 author: "Justin"
-date: "10/24/2019"
 output:
   html_document:
     keep_md: yes
@@ -11,7 +10,7 @@ output:
 
 Using PCA
 
-use prcomp() to do PCA
+use `prcomp()` to do PCA
 
 
 ```r
