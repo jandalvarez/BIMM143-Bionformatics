@@ -19,7 +19,7 @@ This is my work from [BIMM143 @ UC San Diego](https://bioboot.github.io/bimm143_
 
 -Class 15: [Genome Annotation/Gene List Interpretation](https://github.com/jandalvarez/BIMM143-Bionformatics/blob/master/Class15/Class15.md)
 
--Class 17: [Biological Network Analysis (Cytoscape)](
+-Class 17: [Biological Network Analysis (Cytoscape)](https://github.com/jandalvarez/BIMM143-Bionformatics/blob/master/Class17/Class17.md)
 
--Class 18: [Cancer Genomics](
+-Class 18: [Cancer Genomics](https://github.com/jandalvarez/BIMM143-Bionformatics/blob/master/Class18/Class18.md)
 
