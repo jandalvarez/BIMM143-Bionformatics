@@ -1,0 +1,111 @@
+---
+title: "Cancer/Cancer Genomics"
+author: "Justin"
+date: "11/26/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+GenomicDataCommons R package
+
+```{r, eval = FALSE}
+# install/load packages
+
+BiocManager::install( c("GenomicDataCommons", "TCGAbiolinks", "maftools") )
+
+```
+
+```{r}
+library(GenomicDataCommons)
+library(TCGAbiolinks)
+library(maftools)
+```
+
+Check on GDC Status
+```{r}
+status()
+```
+
+
+```{r}
+projects <- getGDCprojects()
+head(projects)
+```
+
+
+
+Add data
+
+```{r}
+cases_by_project <- cases() %>%
+  facet("project.project_id") %>%
+  aggregations()
+head(cases_by_project)
+```
+
+
+Make barplot
+If you use the View(projects) function call you can see all the project names (such as Neuroblastoma, Pancreatic Adenocarcinoma, etc.) along with their project IDs (such as TARGET-NBL, TCGA-PAAD, etc.) and associated information.
+
+Moving onto cases() we can use an example from the package associated publication to answer our first from question above (i.e. find the number of cases/patients across different projects within the GDC):
+
+```{r}
+x <- cases_by_project$project.project_id
+
+# Make a custom color vector for our plot
+colvec <- rep("lightblue", nrow(x))
+
+# want to make the column that has "TCGA-PAAD" in the key col red, 
+colvec[ (x$key == "TCGA-PAAD")] <- "red"
+
+# Plot with 'log' for y axis and rotate labels with 'las'
+#par(___)  
+
+# Using log scale because there's a huge gap in the amount of data 
+par(mar = c(5, 5, 5, 2.1))
+barplot(x$doc_count, names.arg= x$key , log="y", col=colvec, las=2)
+
+```
+
+
+```{r}
+rep
+```
+
+
+
+
+PART 2
+
+```{r}
+
+seqs <- read.fasta("lecture18_sequences.fa")
+
+
+## Calculate positional identity scores
+ide <- conserv(seqs$ali, method="identity")
+mutant.sites <- which(ide < 1) 
+
+## Exclude gap possitions from analysis
+gaps <- gap.inspect(seqs)
+mutant.sites <- mutant.sites[mutant.sites %in% gaps$f.inds]
+
+mutant.sites
+
+```
+
+```{r}
+
+# This will tell us what position the mutation is at because ide tells us which is less than 1 which means different
+pos <-  which(ide < 1)[1]
+pos
+
+# we know that we want +/- 8 from the mutated sight position
+(pos-8):(pos+8)
+```
+
+
+
